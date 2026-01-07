@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>陰森大宅 - 完整版</title>
+    <title>陰森大宅 - 深夜版</title>
     <style>
         /* 0. 基礎設定 */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -11,37 +11,21 @@
         body, html {
             margin: 0; padding: 0; 
             width: 100%; height: 100%;
-            background: #ffffff; /* 白底，如您要求 */
+            /* 背景改為深藍色 */
+            background: #0b0b2b; 
             font-family: sans-serif;
             overflow: hidden;
             touch-action: none;
             user-select: none;
         }
 
+        /* 1. APP 主架構 */
         #app-container {
             display: flex;
             flex-direction: column;
             width: 100vw;
             height: 100vh;
-            align-items: center;
         }
-
-        /* 1. UI 區域 */
-        #ui-header {
-            flex: 0 0 80px;
-            width: 100%;
-            background: #eee;
-            border-bottom: 2px solid #ccc;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            z-index: 20; /* 確保 UI 在鬼魂之上 */
-            position: relative;
-        }
-        .hp { color: red; letter-spacing: 2px; }
-        .time { color: blue; }
 
         /* 2. 遊戲舞台 */
         #game-stage {
@@ -51,118 +35,131 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            overflow: hidden; /* 防止鬼魂超出 */
+            overflow: hidden;
         }
 
-        /* 3. 房子整體結構 (屋頂+本體) */
+        /* 3. 底部 UI (深色化適配背景) */
+        #ui-footer {
+            flex: 0 0 100px;
+            width: 100%;
+            background: #05051a; /* 深藍底 */
+            border-top: 2px solid #334;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            z-index: 20;
+            padding-bottom: 10px;
+            color: #fff; /* 白字 */
+        }
+        .hp { color: #ff3e3e; letter-spacing: 2px; }
+        .time { color: #f1c40f; }
+        .wave { color: #aaa; font-size: 1rem; }
+
+        /* 4. 房子容器 */
         #house-wrapper {
-            /* 維持之前的穩定算法 */
-            width: min(95vw, calc(100vh - 100px));
-            height: min(95vw, calc(100vh - 100px));
+            /* 保持正方形且最大化 */
+            width: min(95vw, calc(100vh - 120px));
+            height: min(95vw, calc(100vh - 120px));
             
             display: flex;
             flex-direction: column;
             position: relative;
-            z-index: 10; /* 房子層級 */
+            z-index: 10;
         }
 
-        /* 屋頂部分 (佔 15%) */
+        /* 屋頂 */
         .roof {
             flex: 0 0 15%;
             width: 100%;
-            background: #222;
-            /* 三角形屋頂 */
+            background: #1a1a1a; /* 接近黑色的屋頂 */
             clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-            /* 讓屋頂稍微蓋住本體一點點，避免縫隙 */
-            margin-bottom: -1px; 
-            z-index: 2;
+            margin-bottom: -1px;
         }
 
-        /* 大宅本體 (佔 85%) */
+        /* 大宅本體 */
         #mansion-body {
             flex: 1;
-            background: #333;
+            background: #2b2b2b; /* 深灰牆面 */
             border: 4px solid #000;
-            border-top: none; /* 上方邊框由屋頂銜接 */
+            border-top: none; 
             
             /* 5x5 網格 */
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(5, 1fr);
-            gap: 6px;
-            padding: 8px;
+            /* 讓窗戶在各自的格子內居中 */
+            place-items: center; 
+            padding: 2%;
         }
 
-        /* 4. 窗戶樣式 */
+        /* 5. 窗戶樣式 (縮小版) */
         .window {
-            width: 100%;
-            height: 100%;
+            /* 原本是 100%，現在改為 60%，視覺面積大幅縮小 */
+            width: 60%; 
+            height: 60%;
             background: #000;
-            border: 2px solid #666;
+            border: 2px solid #555;
             border-radius: 4px;
             position: relative;
-            transition: background 0.1s;
+            /* 增加陰影讓小窗戶更有立體感 */
+            box-shadow: 0 0 5px rgba(0,0,0,0.8);
         }
 
-        /* 開啟 (亮黃) */
         .window.open {
             background: #ffcc00;
             border-color: #fff;
-            box-shadow: 0 0 15px #ffcc00;
+            box-shadow: 0 0 20px #ffcc00; /* 光暈增強 */
         }
 
-        /* 懲罰 (紅) */
         .window.danger {
             background: #ff0000 !important;
         }
 
-        /* 5. 點擊關窗特效動畫 */
+        /* 點擊特效 */
         .seal-anim {
             animation: sealEffect 0.3s ease-out forwards;
         }
-
         @keyframes sealEffect {
-            0% { transform: scale(1); border-color: #fff; background: #00ff00; }
-            50% { transform: scale(0.8); box-shadow: 0 0 20px #00ff00; }
-            100% { transform: scale(1); border-color: #666; background: #000; }
+            0% { transform: scale(1.2); background: #00ff00; } /* 放大一點比較明顯 */
+            50% { transform: scale(0.8); box-shadow: 0 0 25px #00ff00; }
+            100% { transform: scale(1); background: #000; }
         }
 
-        /* 6. 飄動鬼魂 */
+        /* 6. 鬼魂 */
         .ghost {
             position: absolute;
-            font-size: 40px;
-            opacity: 0.6;
-            pointer-events: none; /* 關鍵：讓點擊穿透鬼魂 */
-            z-index: 15; /* 在房子前面，但比 UI 低 */
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+            font-size: clamp(2rem, 8vw, 3rem);
+            opacity: 0.7;
+            pointer-events: none;
+            z-index: 15;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
         }
 
-        /* 遮罩層 */
+        /* 遮罩 */
         #overlay {
             position: absolute; inset: 0;
-            background: rgba(255,255,255,0.95);
+            background: rgba(11, 11, 43, 0.95); /* 深藍遮罩 */
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             z-index: 100;
         }
         
         button {
-            padding: 15px 50px; font-size: 24px;
-            background: #333; color: white;
+            padding: 15px 50px; font-size: 1.5rem;
+            background: #ffcc00; color: #000; /* 按鈕改成亮黃色對比 */
             border: none; border-radius: 8px;
             margin-top: 20px; cursor: pointer;
+            font-weight: bold;
         }
+        
+        h1 { color: #fff; text-shadow: 0 0 10px #ffcc00; }
     </style>
 </head>
 <body>
 
 <div id="app-container">
-    <div id="ui-header">
-        <div>時間: <span id="timer" class="time">120</span></div>
-        <div id="hp-display" class="hp"❤️❤️❤️</div>
-        <div style="color:#888">下波: <span id="wave-timer">10</span></div>
-    </div>
-
     <div id="game-stage">
         <div id="house-wrapper">
             <div class="roof"></div>
@@ -170,20 +167,26 @@
                 </div>
         </div>
     </div>
+
+    <div id="ui-footer">
+        <div><span id="timer" class="time">120</span>s</div>
+        <div id="hp-display" class="hp"❤️❤️❤️</div>
+        <div class="wave">下波: <span id="wave-timer">10</span></div>
+    </div>
 </div>
 
 <div id="overlay">
-    <h1 style="color:#333; font-size: 2.5rem;">大宅封印</h1>
+    <h1 style="font-size: 2.5rem;">大宅封印</h1>
     <button onclick="startGame()">開始遊戲</button>
 </div>
 
 <script>
     const mansionBody = document.getElementById('mansion-body');
-    const gameStage = document.getElementById('game-stage');
     const timerEl = document.getElementById('timer');
     const waveEl = document.getElementById('wave-timer');
     const hpEl = document.getElementById('hp-display');
     const overlay = document.getElementById('overlay');
+    const gameStage = document.getElementById('game-stage');
 
     let hp = 3;
     let timeLeft = 120;
@@ -195,7 +198,6 @@
     let gameLoop;
     let ghostInterval;
 
-    // 1. 初始化窗戶
     function init() {
         mansionBody.innerHTML = '';
         windows = [];
@@ -203,13 +205,12 @@
             const win = document.createElement('div');
             win.className = 'window';
             
+            // 綁定觸控與點擊
             const handleInteract = (e) => {
                 e.preventDefault();
                 if (gameActive && activeIndices.has(i)) {
                     activeIndices.delete(i);
                     win.classList.remove('open', 'danger');
-                    
-                    // 觸發封印特效
                     triggerSealEffect(win);
                 }
             };
@@ -221,21 +222,18 @@
         }
     }
 
-    // 封印特效函數
     function triggerSealEffect(element) {
-        // 移除再添加 class 以便重播動畫
         element.classList.remove('seal-anim');
-        void element.offsetWidth; // 強制重繪
+        void element.offsetWidth; 
         element.classList.add('seal-anim');
     }
 
-    // 2. 鬼魂系統
     function startGhosts() {
         if (ghostInterval) clearInterval(ghostInterval);
         ghostInterval = setInterval(() => {
             if(!gameActive) return;
             spawnGhost();
-        }, 800); // 每 0.8 秒生成一隻
+        }, 1000);
     }
 
     function spawnGhost() {
@@ -243,25 +241,20 @@
         ghost.className = 'ghost';
         ghost.innerText = '👻';
         
-        // 隨機方向：0 = 左到右, 1 = 右到左
         const direction = Math.random() > 0.5 ? 1 : -1;
-        const startX = direction === 1 ? -10 : 110;
-        const endX = direction === 1 ? 110 : -10;
+        const startX = direction === 1 ? -20 : 120; 
         
-        // 隨機高度 (0% ~ 90%)
-        const randomY = Math.random() * 90;
-        // 隨機速度 (3s ~ 7s)
-        const duration = 3000 + Math.random() * 4000;
+        const randomY = 10 + Math.random() * 80; 
+        const duration = 3000 + Math.random() * 3000;
 
         ghost.style.left = startX + '%';
         ghost.style.top = randomY + '%';
         
         gameStage.appendChild(ghost);
 
-        // 使用 Web Animations API 讓鬼魂平滑飄動
         const animation = ghost.animate([
-            { transform: `translateX(0) translateY(0)` },
-            { transform: `translateX(${direction === 1 ? '120vw' : '-120vw'}) translateY(${Math.random()*20 - 10}px)` }
+            { transform: `translateX(0)` },
+            { transform: `translateX(${direction === 1 ? '140vw' : '-140vw'})` }
         ], {
             duration: duration,
             easing: 'linear'
@@ -270,7 +263,6 @@
         animation.onfinish = () => ghost.remove();
     }
 
-    // 3. 遊戲流程
     function startGame() {
         overlay.style.display = 'none';
         hp = 3; timeLeft = 120; waveCountdown = 10; waveCount = 0;
@@ -303,7 +295,7 @@
         waveCount++;
         activeIndices.clear();
         windows.forEach(w => {
-            w.className = 'window'; // 清除所有狀態包含 seal-anim
+            w.className = 'window';
             w.style.backgroundColor = '';
         });
 
@@ -333,15 +325,14 @@
         clearInterval(gameLoop);
         clearInterval(ghostInterval);
         gameActive = false;
-        // 清除場上鬼魂
         document.querySelectorAll('.ghost').forEach(g => g.remove());
         
         overlay.style.display = 'flex';
         overlay.innerHTML = `
-            <h1 style="color:${hp<=0?'red':'green'}">
+            <h1 style="color:${hp<=0?'#ff3e3e':'#00ff00'}; text-shadow:0 0 10px #000;">
                 ${hp<=0 ? '失敗' : '大宅封印成功'}
             </h1>
-            <p style="font-size: 1.2rem; color:#333;">堅持了 ${120 - timeLeft} 秒</p>
+            <p style="font-size: 1.2rem; color:#fff;">存活時間: ${120 - timeLeft}s</p>
             <button onclick="location.reload()" style="margin-top:20px;">重新挑戰</button>
         `;
     }
