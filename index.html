@@ -3,140 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>陰森大宅 - 暴力滿版</title>
+    <title>陰森大宅 - 完整版</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Creepster&display=swap');
-
-        /* 0. 基礎設定：禁止滾動，背景全黑 */
+        /* 0. 基礎設定 */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background: #000;
-            font-family: 'Creepster', cursive;
-            overflow: hidden; touch-action: none;
+            margin: 0; padding: 0; 
+            width: 100%; height: 100%;
+            background: #ffffff; /* 白底，如您要求 */
+            font-family: sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
         }
 
-        /* 1. UI 層：絕對佔據頂部 12% 的高度 */
-        #ui-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%;
-            height: 12%; /* UI 佔 12% */
-            background: linear-gradient(to bottom, #220000, #000);
+        #app-container {
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            width: 100vw;
+            height: 100vh;
             align-items: center;
-            z-index: 100;
-            border-bottom: 2px solid #444;
         }
 
-        .stats-row {
+        /* 1. UI 區域 */
+        #ui-header {
+            flex: 0 0 80px;
+            width: 100%;
+            background: #eee;
+            border-bottom: 2px solid #ccc;
             display: flex;
             justify-content: space-around;
-            width: 100%;
-            font-size: 1.8rem; /* 大字體 */
-            line-height: 1;
-        }
-        #hp-display { color: #ff3e3e; text-shadow: 0 0 10px red; }
-        .timer-box { color: #f1c40f; }
-
-        /* 2. 房子容器：絕對定位，佔據剩餘空間 */
-        .house-container {
-            position: absolute;
-            top: 12%; /* 緊接在 UI 下方 */
-            bottom: 10px; /* 留一點點底邊 */
-            left: 2%; 
-            width: 96%; /* 幾乎佔滿寬度 */
-            /* 移除 aspect-ratio，強制拉伸 */
-            background: linear-gradient(180deg, #444 0%, #222 100%);
-            border: 4px solid #111;
-            /* 屋頂形狀 */
-            clip-path: polygon(50% 0%, 100% 10%, 100% 100%, 0% 100%, 0% 10%);
-            
-            display: flex;
-            flex-direction: column; /* 垂直排列樓層 */
-            
-            padding-top: 10%; /* 預留屋頂尖端的空間 */
-            padding-bottom: 2%;
-            padding-left: 2%;
-            padding-right: 2%;
-            z-index: 10;
-        }
-
-        /* 3. 樓層：強制均分高度 */
-        .floor {
-            flex: 1; /* 每個樓層自動平分剩餘高度 */
-            width: 100%;
-            display: flex;
-            justify-content: space-around; /* 窗戶水平分佈 */
             align-items: center;
-            border-bottom: 1px solid rgba(0,0,0,0.3);
-        }
-
-        /* 4. 窗戶：在樓層中撐大 */
-        .window {
-            width: 17%; /* 寬度佔樓層的 17% */
-            height: 75%; /* 高度佔樓層的 75% */
-            background: #000;
-            border: 2px solid #555;
-            border-radius: 6px;
-            box-shadow: inset 0 0 5px #000;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 20; /* 確保 UI 在鬼魂之上 */
             position: relative;
         }
+        .hp { color: red; letter-spacing: 2px; }
+        .time { color: blue; }
 
-        /* 開窗特效 */
-        .window.open {
-            background: radial-gradient(circle, #fff3b0 0%, #f1c40f 100%);
-            box-shadow: 0 0 25px #f1c40f;
-            border-color: #fff;
+        /* 2. 遊戲舞台 */
+        #game-stage {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden; /* 防止鬼魂超出 */
         }
 
-        /* 失敗特效 */
+        /* 3. 房子整體結構 (屋頂+本體) */
+        #house-wrapper {
+            /* 維持之前的穩定算法 */
+            width: min(95vw, calc(100vh - 100px));
+            height: min(95vw, calc(100vh - 100px));
+            
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10; /* 房子層級 */
+        }
+
+        /* 屋頂部分 (佔 15%) */
+        .roof {
+            flex: 0 0 15%;
+            width: 100%;
+            background: #222;
+            /* 三角形屋頂 */
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            /* 讓屋頂稍微蓋住本體一點點，避免縫隙 */
+            margin-bottom: -1px; 
+            z-index: 2;
+        }
+
+        /* 大宅本體 (佔 85%) */
+        #mansion-body {
+            flex: 1;
+            background: #333;
+            border: 4px solid #000;
+            border-top: none; /* 上方邊框由屋頂銜接 */
+            
+            /* 5x5 網格 */
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 6px;
+            padding: 8px;
+        }
+
+        /* 4. 窗戶樣式 */
+        .window {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            border: 2px solid #666;
+            border-radius: 4px;
+            position: relative;
+            transition: background 0.1s;
+        }
+
+        /* 開啟 (亮黃) */
+        .window.open {
+            background: #ffcc00;
+            border-color: #fff;
+            box-shadow: 0 0 15px #ffcc00;
+        }
+
+        /* 懲罰 (紅) */
         .window.danger {
             background: #ff0000 !important;
-            animation: shake 0.2s infinite;
         }
-        @keyframes shake { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        /* 鬼魂與 UI */
+        /* 5. 點擊關窗特效動畫 */
+        .seal-anim {
+            animation: sealEffect 0.3s ease-out forwards;
+        }
+
+        @keyframes sealEffect {
+            0% { transform: scale(1); border-color: #fff; background: #00ff00; }
+            50% { transform: scale(0.8); box-shadow: 0 0 20px #00ff00; }
+            100% { transform: scale(1); border-color: #666; background: #000; }
+        }
+
+        /* 6. 飄動鬼魂 */
         .ghost {
-            position: absolute; font-size: 35px; z-index: 200; pointer-events: none;
+            position: absolute;
+            font-size: 40px;
+            opacity: 0.6;
+            pointer-events: none; /* 關鍵：讓點擊穿透鬼魂 */
+            z-index: 15; /* 在房子前面，但比 UI 低 */
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
         }
-        #modal {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.95);
+
+        /* 遮罩層 */
+        #overlay {
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,0.95);
             display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 500;
+            justify-content: center; align-items: center;
+            z-index: 100;
         }
+        
         button {
-            padding: 20px 60px; font-family: 'Creepster'; font-size: 2.5rem;
-            background: #c0392b; color: white; border: none; border-radius: 10px;
+            padding: 15px 50px; font-size: 24px;
+            background: #333; color: white;
+            border: none; border-radius: 8px;
+            margin-top: 20px; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-<div id="ui-layer">
-    <div class="stats-row">
-        <div class="timer-box">TIME: <span id="timer">120</span></div>
-        <div id="hp-display"❤️❤️❤️</div>
+<div id="app-container">
+    <div id="ui-header">
+        <div>時間: <span id="timer" class="time">120</span></div>
+        <div id="hp-display" class="hp"❤️❤️❤️</div>
+        <div style="color:#888">下波: <span id="wave-timer">10</span></div>
     </div>
-    <div style="font-size: 1rem; color: #888; margin-top: 5px;">NEXT WAVE: <span id="wave-timer">10</span></div>
+
+    <div id="game-stage">
+        <div id="house-wrapper">
+            <div class="roof"></div>
+            <div id="mansion-body">
+                </div>
+        </div>
+    </div>
 </div>
 
-<div class="house-container" id="mansion">
-    </div>
-
-<div id="modal">
-    <h1 id="m-title" style="font-size: 4rem; color: #e74c3c;">SPOOKY HOUSE</h1>
-    <button onclick="startGame()">START GAME</button>
+<div id="overlay">
+    <h1 style="color:#333; font-size: 2.5rem;">大宅封印</h1>
+    <button onclick="startGame()">開始遊戲</button>
 </div>
 
 <script>
-    const mansion = document.getElementById('mansion');
+    const mansionBody = document.getElementById('mansion-body');
+    const gameStage = document.getElementById('game-stage');
     const timerEl = document.getElementById('timer');
     const waveEl = document.getElementById('wave-timer');
     const hpEl = document.getElementById('hp-display');
-    const modal = document.getElementById('modal');
+    const overlay = document.getElementById('overlay');
 
     let hp = 3;
     let timeLeft = 120;
@@ -145,46 +192,99 @@
     let gameActive = false;
     let windows = [];
     let activeIndices = new Set();
+    let gameLoop;
+    let ghostInterval;
 
-    function initMansion() {
-        mansion.innerHTML = '';
+    // 1. 初始化窗戶
+    function init() {
+        mansionBody.innerHTML = '';
         windows = [];
-        for (let f = 0; f < 5; f++) {
-            const floor = document.createElement('div');
-            floor.className = 'floor';
-            for (let w = 0; w < 5; w++) {
-                const win = document.createElement('div');
-                win.className = 'window';
-                const id = f * 5 + w;
-                
-                const closeAction = (e) => {
-                    e.preventDefault();
-                    if (gameActive && activeIndices.has(id)) {
-                        activeIndices.delete(id);
-                        win.classList.remove('open', 'danger');
-                    }
-                };
-                win.addEventListener('touchstart', closeAction);
-                win.addEventListener('mousedown', closeAction);
+        for (let i = 0; i < 25; i++) {
+            const win = document.createElement('div');
+            win.className = 'window';
+            
+            const handleInteract = (e) => {
+                e.preventDefault();
+                if (gameActive && activeIndices.has(i)) {
+                    activeIndices.delete(i);
+                    win.classList.remove('open', 'danger');
+                    
+                    // 觸發封印特效
+                    triggerSealEffect(win);
+                }
+            };
+            win.addEventListener('touchstart', handleInteract);
+            win.addEventListener('mousedown', handleInteract);
 
-                floor.appendChild(win);
-                windows.push(win);
-            }
-            mansion.appendChild(floor);
+            mansionBody.appendChild(win);
+            windows.push(win);
         }
     }
 
+    // 封印特效函數
+    function triggerSealEffect(element) {
+        // 移除再添加 class 以便重播動畫
+        element.classList.remove('seal-anim');
+        void element.offsetWidth; // 強制重繪
+        element.classList.add('seal-anim');
+    }
+
+    // 2. 鬼魂系統
+    function startGhosts() {
+        if (ghostInterval) clearInterval(ghostInterval);
+        ghostInterval = setInterval(() => {
+            if(!gameActive) return;
+            spawnGhost();
+        }, 800); // 每 0.8 秒生成一隻
+    }
+
+    function spawnGhost() {
+        const ghost = document.createElement('div');
+        ghost.className = 'ghost';
+        ghost.innerText = '👻';
+        
+        // 隨機方向：0 = 左到右, 1 = 右到左
+        const direction = Math.random() > 0.5 ? 1 : -1;
+        const startX = direction === 1 ? -10 : 110;
+        const endX = direction === 1 ? 110 : -10;
+        
+        // 隨機高度 (0% ~ 90%)
+        const randomY = Math.random() * 90;
+        // 隨機速度 (3s ~ 7s)
+        const duration = 3000 + Math.random() * 4000;
+
+        ghost.style.left = startX + '%';
+        ghost.style.top = randomY + '%';
+        
+        gameStage.appendChild(ghost);
+
+        // 使用 Web Animations API 讓鬼魂平滑飄動
+        const animation = ghost.animate([
+            { transform: `translateX(0) translateY(0)` },
+            { transform: `translateX(${direction === 1 ? '120vw' : '-120vw'}) translateY(${Math.random()*20 - 10}px)` }
+        ], {
+            duration: duration,
+            easing: 'linear'
+        });
+
+        animation.onfinish = () => ghost.remove();
+    }
+
+    // 3. 遊戲流程
     function startGame() {
-        modal.style.display = 'none';
+        overlay.style.display = 'none';
         hp = 3; timeLeft = 120; waveCountdown = 10; waveCount = 0;
         gameActive = true;
+        
         updateHP();
-        initMansion();
+        init();
         triggerWave();
-        spawnGhosts();
+        startGhosts();
 
-        const loop = setInterval(() => {
-            timeLeft--; waveCountdown--;
+        if (gameLoop) clearInterval(gameLoop);
+        gameLoop = setInterval(() => {
+            timeLeft--;
+            waveCountdown--;
             timerEl.innerText = timeLeft;
             waveEl.innerText = waveCountdown;
 
@@ -193,12 +293,8 @@
                 waveCountdown = 10;
                 triggerWave();
             }
-
             if (timeLeft <= 0 || hp <= 0) {
-                clearInterval(loop);
-                gameActive = false;
-                modal.style.display = 'flex';
-                document.getElementById('m-title').innerText = hp <= 0 ? "DEVOURED" : "SURVIVED";
+                endGame();
             }
         }, 1000);
     }
@@ -206,9 +302,13 @@
     function triggerWave() {
         waveCount++;
         activeIndices.clear();
-        windows.forEach(w => w.classList.remove('open', 'danger'));
+        windows.forEach(w => {
+            w.className = 'window'; // 清除所有狀態包含 seal-anim
+            w.style.backgroundColor = '';
+        });
+
         let count = Math.min(2 * waveCount, 22);
-        let ids = [...Array(25).keys()].sort(() => Math.random() - 0.5);
+        let ids = Array.from({length: 25}, (_, i) => i).sort(() => Math.random() - 0.5);
         for (let i = 0; i < count; i++) {
             activeIndices.add(ids[i]);
             windows[ids[i]].classList.add('open');
@@ -221,47 +321,32 @@
             updateHP();
             activeIndices.forEach(idx => {
                 windows[idx].classList.add('danger');
-                showSkull(windows[idx]);
             });
         }
-    }
-
-    function showSkull(winElement) {
-        const s = document.createElement('div');
-        s.className = 'ghost';
-        s.innerText = '💀';
-        const rect = winElement.getBoundingClientRect();
-        s.style.left = rect.left + 'px'; 
-        s.style.top = rect.top + 'px';
-        document.body.appendChild(s);
-        s.animate([{transform:'scale(1)'}, {transform:'scale(5)', opacity:0}], 800);
-        setTimeout(() => s.remove(), 800);
-    }
-
-    function spawnGhosts() {
-        // 簡單的背景鬼魂邏輯
-        setInterval(() => {
-            if(!gameActive) return;
-            const g = document.createElement('div');
-            g.className = 'ghost';
-            g.innerText = '👻';
-            g.style.left = Math.random() * 90 + '%';
-            g.style.bottom = '0px';
-            document.body.appendChild(g);
-            g.animate([
-                { transform: 'translateY(0)', opacity: 0 },
-                { opacity: 0.3, offset: 0.2 },
-                { transform: 'translateY(-100vh)', opacity: 0 }
-            ], { duration: 5000 });
-            setTimeout(() => g.remove(), 5000);
-        }, 2000);
     }
 
     function updateHP() {
         hpEl.innerText = "❤️".repeat(Math.max(0, hp)) + "🖤".repeat(Math.max(0, 3 - hp));
     }
 
-    initMansion();
+    function endGame() {
+        clearInterval(gameLoop);
+        clearInterval(ghostInterval);
+        gameActive = false;
+        // 清除場上鬼魂
+        document.querySelectorAll('.ghost').forEach(g => g.remove());
+        
+        overlay.style.display = 'flex';
+        overlay.innerHTML = `
+            <h1 style="color:${hp<=0?'red':'green'}">
+                ${hp<=0 ? '失敗' : '大宅封印成功'}
+            </h1>
+            <p style="font-size: 1.2rem; color:#333;">堅持了 ${120 - timeLeft} 秒</p>
+            <button onclick="location.reload()" style="margin-top:20px;">重新挑戰</button>
+        `;
+    }
+
+    init();
 </script>
 </body>
 </html>
