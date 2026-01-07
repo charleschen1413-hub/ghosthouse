@@ -3,156 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>陰森大宅 9:16 極限版</title>
+    <title>陰森大宅 - 暴力滿版</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Creepster&display=swap');
 
+        /* 0. 基礎設定：禁止滾動，背景全黑 */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            background: #050505; color: white;
+            background: #000;
             font-family: 'Creepster', cursive;
-            display: flex; justify-content: center; align-items: center;
             overflow: hidden; touch-action: none;
         }
 
-        /* 鎖定 9:16 比例容器，並確保大宅撐滿 */
-        .game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            max-width: 56.25vh; /* 9/16 比例 */
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* 永久飄動鬼魂背景 */
-        .ambient-ghost {
+        /* 1. UI 層：絕對佔據頂部 12% 的高度 */
+        #ui-layer {
             position: absolute;
-            font-size: 35px;
-            opacity: 0.3;
-            pointer-events: none;
-            z-index: 1;
-            filter: blur(1px);
-        }
-
-        /* UI 層：置頂且精簡 */
-        #game-ui {
-            height: 12%;
+            top: 0; left: 0; width: 100%;
+            height: 12%; /* UI 佔 12% */
+            background: linear-gradient(to bottom, #220000, #000);
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
+            justify-content: center;
             align-items: center;
-            z-index: 10;
-            background: linear-gradient(to bottom, rgba(20,0,30,0.9), transparent);
-            padding-bottom: 10px;
+            z-index: 100;
+            border-bottom: 2px solid #444;
         }
 
         .stats-row {
             display: flex;
-            justify-content: space-between;
-            width: 90%;
-            font-size: 1.8rem;
+            justify-content: space-around;
+            width: 100%;
+            font-size: 1.8rem; /* 大字體 */
+            line-height: 1;
         }
-
-        #hp-display { color: #ff3e3e; text-shadow: 0 0 10px #ff0000; }
+        #hp-display { color: #ff3e3e; text-shadow: 0 0 10px red; }
         .timer-box { color: #f1c40f; }
 
-        /* 滿版大宅牆面 */
-        .mansion-house {
-            flex: 1;
-            width: 95%;
-            margin: 0 auto 5% auto; /* 左右置中，底部留空隙 */
-            background: linear-gradient(180deg, #2c1a32 0%, #150e1f 100%);
-            border: 4px solid #1a1110;
-            clip-path: polygon(2% 3%, 98% 0%, 100% 100%, 0% 100%);
+        /* 2. 房子容器：絕對定位，佔據剩餘空間 */
+        .house-container {
+            position: absolute;
+            top: 12%; /* 緊接在 UI 下方 */
+            bottom: 10px; /* 留一點點底邊 */
+            left: 2%; 
+            width: 96%; /* 幾乎佔滿寬度 */
+            /* 移除 aspect-ratio，強制拉伸 */
+            background: linear-gradient(180deg, #444 0%, #222 100%);
+            border: 4px solid #111;
+            /* 屋頂形狀 */
+            clip-path: polygon(50% 0%, 100% 10%, 100% 100%, 0% 100%, 0% 10%);
+            
             display: flex;
-            flex-direction: column;
-            padding: 50px 10px 20px 10px; /* 上方預留空間給屋頂感 */
-            box-sizing: border-box;
-            z-index: 5;
-            box-shadow: inset 0 0 80px #000;
+            flex-direction: column; /* 垂直排列樓層 */
+            
+            padding-top: 10%; /* 預留屋頂尖端的空間 */
+            padding-bottom: 2%;
+            padding-left: 2%;
+            padding-right: 2%;
+            z-index: 10;
         }
 
+        /* 3. 樓層：強制均分高度 */
         .floor {
-            flex: 1;
+            flex: 1; /* 每個樓層自動平分剩餘高度 */
+            width: 100%;
             display: flex;
-            justify-content: space-around;
+            justify-content: space-around; /* 窗戶水平分佈 */
             align-items: center;
-            gap: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.3);
         }
 
-        /* 窗戶：大幅增加尺寸與點擊範圍 */
+        /* 4. 窗戶：在樓層中撐大 */
         .window {
-            flex: 1;
-            height: 80%; /* 讓窗戶在樓層中佔據大部分高度 */
-            background: #111;
-            border: 2px solid #3d2b1f;
+            width: 17%; /* 寬度佔樓層的 17% */
+            height: 75%; /* 高度佔樓層的 75% */
+            background: #000;
+            border: 2px solid #555;
             border-radius: 6px;
-            box-shadow: inset 0 0 15px #000;
-            transition: all 0.15s;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            box-shadow: inset 0 0 5px #000;
+            position: relative;
         }
 
-        /* 窗戶開啟：亮黃色發光 */
+        /* 開窗特效 */
         .window.open {
-            background: radial-gradient(circle, #fff3b0 0%, #f1c40f 60%, #e67e22 100%);
-            box-shadow: 0 0 25px 5px #f1c40f, inset 0 0 10px #fff;
+            background: radial-gradient(circle, #fff3b0 0%, #f1c40f 100%);
+            box-shadow: 0 0 25px #f1c40f;
             border-color: #fff;
         }
 
-        /* 入侵警告：閃爍紅光 */
+        /* 失敗特效 */
         .window.danger {
-            animation: shakeRed 0.15s infinite;
             background: #ff0000 !important;
+            animation: shake 0.2s infinite;
         }
+        @keyframes shake { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        @keyframes shakeRed {
-            0% { transform: scale(1.05) rotate(0deg); }
-            50% { transform: scale(1.05) rotate(2deg); }
-            100% { transform: scale(1.05) rotate(-2deg); }
+        /* 鬼魂與 UI */
+        .ghost {
+            position: absolute; font-size: 35px; z-index: 200; pointer-events: none;
         }
-
-        /* 覆蓋層：開始與結束 */
-        #overlay {
-            position: absolute; inset: 0;
-            background: rgba(0,0,0,0.85);
+        #modal {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.95);
             display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            z-index: 100;
+            justify-content: center; align-items: center; z-index: 500;
         }
-
         button {
-            padding: 15px 50px; font-family: 'Creepster';
-            font-size: 2.5rem; background: #8e44ad; color: white;
-            border: none; border-radius: 50px; cursor: pointer;
-            box-shadow: 0 0 20px rgba(142, 68, 173, 0.6);
+            padding: 20px 60px; font-family: 'Creepster'; font-size: 2.5rem;
+            background: #c0392b; color: white; border: none; border-radius: 10px;
         }
     </style>
 </head>
 <body>
 
-<div class="game-container" id="container">
-    <div id="game-ui">
-        <div class="stats-row">
-            <div class="timer-box">T: <span id="timer">120</span>s</div>
-            <div id="hp-display"❤️❤️❤️</div>
-        </div>
-        <div style="color: #888; font-size: 1.1rem;">Next Change: <span id="wave-timer">10</span>s</div>
+<div id="ui-layer">
+    <div class="stats-row">
+        <div class="timer-box">TIME: <span id="timer">120</span></div>
+        <div id="hp-display"❤️❤️❤️</div>
+    </div>
+    <div style="font-size: 1rem; color: #888; margin-top: 5px;">NEXT WAVE: <span id="wave-timer">10</span></div>
+</div>
+
+<div class="house-container" id="mansion">
     </div>
 
-    <div class="mansion-house" id="mansion">
-        </div>
-
-    <div id="overlay">
-        <h1 id="overlay-title" style="font-size: 3.5rem; margin-bottom: 20px; color:#e74c3c;">House of Fear</h1>
-        <button onclick="startGame()">START</button>
-        <p id="overlay-desc" style="margin-top: 20px; color: #aaa; font-size: 1.2rem;">TAP WINDOWS TO SEAL GHOSTS</p>
-    </div>
+<div id="modal">
+    <h1 id="m-title" style="font-size: 4rem; color: #e74c3c;">SPOOKY HOUSE</h1>
+    <button onclick="startGame()">START GAME</button>
 </div>
 
 <script>
@@ -160,8 +136,7 @@
     const timerEl = document.getElementById('timer');
     const waveEl = document.getElementById('wave-timer');
     const hpEl = document.getElementById('hp-display');
-    const overlay = document.getElementById('overlay');
-    const container = document.getElementById('container');
+    const modal = document.getElementById('modal');
 
     let hp = 3;
     let timeLeft = 120;
@@ -169,31 +144,9 @@
     let waveCount = 0;
     let gameActive = false;
     let windows = [];
-    let activeWindowIndices = new Set();
+    let activeIndices = new Set();
 
-    // 1. 背景飄動鬼魂系統 (永久存在)
-    function startAmbientGhosts() {
-        setInterval(() => {
-            const g = document.createElement('div');
-            g.className = 'ambient-ghost';
-            g.innerText = '👻';
-            g.style.left = Math.random() * 100 + '%';
-            g.style.bottom = '-10%';
-            container.appendChild(g);
-
-            const duration = 6000 + Math.random() * 4000;
-            g.animate([
-                { transform: 'translateY(0) rotate(0deg)', opacity: 0 },
-                { transform: `translate(${(Math.random()-0.5)*150}px, -45vh) rotate(180deg)`, opacity: 0.3 },
-                { transform: `translate(${(Math.random()-0.5)*300}px, -95vh) rotate(360deg)`, opacity: 0 }
-            ], { duration: duration, easing: 'linear' });
-
-            setTimeout(() => g.remove(), duration);
-        }, 1200);
-    }
-
-    // 2. 初始化 5x5 大窗戶
-    function initWindows() {
+    function initMansion() {
         mansion.innerHTML = '';
         windows = [];
         for (let f = 0; f < 5; f++) {
@@ -204,15 +157,15 @@
                 win.className = 'window';
                 const id = f * 5 + w;
                 
-                const closeWin = (e) => {
+                const closeAction = (e) => {
                     e.preventDefault();
-                    if (gameActive && activeWindowIndices.has(id)) {
-                        activeWindowIndices.delete(id);
+                    if (gameActive && activeIndices.has(id)) {
+                        activeIndices.delete(id);
                         win.classList.remove('open', 'danger');
                     }
                 };
-                win.addEventListener('touchstart', closeWin);
-                win.addEventListener('mousedown', closeWin);
+                win.addEventListener('touchstart', closeAction);
+                win.addEventListener('mousedown', closeAction);
 
                 floor.appendChild(win);
                 windows.push(win);
@@ -221,86 +174,94 @@
         }
     }
 
-    // 3. 遊戲核心循環
     function startGame() {
-        overlay.style.display = 'none';
+        modal.style.display = 'none';
         hp = 3; timeLeft = 120; waveCountdown = 10; waveCount = 0;
         gameActive = true;
         updateHP();
-        initWindows();
+        initMansion();
         triggerWave();
+        spawnGhosts();
 
-        const mainLoop = setInterval(() => {
+        const loop = setInterval(() => {
             timeLeft--; waveCountdown--;
             timerEl.innerText = timeLeft;
             waveEl.innerText = waveCountdown;
 
-            // 判定期 (第6秒開始閃紅)
             if (waveCountdown === 4) checkInvasion();
-
-            // 變換波次
             if (waveCountdown <= 0) {
                 waveCountdown = 10;
                 triggerWave();
             }
 
             if (timeLeft <= 0 || hp <= 0) {
-                clearInterval(mainLoop);
-                endGame();
+                clearInterval(loop);
+                gameActive = false;
+                modal.style.display = 'flex';
+                document.getElementById('m-title').innerText = hp <= 0 ? "DEVOURED" : "SURVIVED";
             }
         }, 1000);
     }
 
     function triggerWave() {
         waveCount++;
-        activeWindowIndices.clear();
+        activeIndices.clear();
         windows.forEach(w => w.classList.remove('open', 'danger'));
-        
-        let num = Math.min(2 * waveCount, 22);
-        let shuffle = [...Array(25).keys()].sort(() => Math.random() - 0.5);
-        for (let i = 0; i < num; i++) {
-            activeWindowIndices.add(shuffle[i]);
-            windows[shuffle[i]].classList.add('open');
+        let count = Math.min(2 * waveCount, 22);
+        let ids = [...Array(25).keys()].sort(() => Math.random() - 0.5);
+        for (let i = 0; i < count; i++) {
+            activeIndices.add(ids[i]);
+            windows[ids[i]].classList.add('open');
         }
     }
 
     function checkInvasion() {
-        if (activeWindowIndices.size > 0) {
+        if (activeIndices.size > 0) {
             hp--;
             updateHP();
-            activeWindowIndices.forEach(idx => {
+            activeIndices.forEach(idx => {
                 windows[idx].classList.add('danger');
-                // 噴出骷髏鬼魂
-                const skull = document.createElement('div');
-                skull.className = 'ambient-ghost';
-                skull.innerText = '💀';
-                const rect = windows[idx].getBoundingClientRect();
-                skull.style.left = rect.left + 'px';
-                skull.style.top = rect.top + 'px';
-                skull.style.opacity = "1";
-                container.appendChild(skull);
-                skull.animate([
-                    { transform: 'scale(1)', opacity: 1 },
-                    { transform: 'scale(4)', opacity: 0 }
-                ], 800);
-                setTimeout(() => skull.remove(), 800);
+                showSkull(windows[idx]);
             });
         }
+    }
+
+    function showSkull(winElement) {
+        const s = document.createElement('div');
+        s.className = 'ghost';
+        s.innerText = '💀';
+        const rect = winElement.getBoundingClientRect();
+        s.style.left = rect.left + 'px'; 
+        s.style.top = rect.top + 'px';
+        document.body.appendChild(s);
+        s.animate([{transform:'scale(1)'}, {transform:'scale(5)', opacity:0}], 800);
+        setTimeout(() => s.remove(), 800);
+    }
+
+    function spawnGhosts() {
+        // 簡單的背景鬼魂邏輯
+        setInterval(() => {
+            if(!gameActive) return;
+            const g = document.createElement('div');
+            g.className = 'ghost';
+            g.innerText = '👻';
+            g.style.left = Math.random() * 90 + '%';
+            g.style.bottom = '0px';
+            document.body.appendChild(g);
+            g.animate([
+                { transform: 'translateY(0)', opacity: 0 },
+                { opacity: 0.3, offset: 0.2 },
+                { transform: 'translateY(-100vh)', opacity: 0 }
+            ], { duration: 5000 });
+            setTimeout(() => g.remove(), 5000);
+        }, 2000);
     }
 
     function updateHP() {
         hpEl.innerText = "❤️".repeat(Math.max(0, hp)) + "🖤".repeat(Math.max(0, 3 - hp));
     }
 
-    function endGame() {
-        gameActive = false;
-        overlay.style.display = 'flex';
-        document.getElementById('overlay-title').innerText = hp <= 0 ? "DEVOURED" : "SURVIVED";
-        document.getElementById('overlay-desc').innerText = `You held out for ${120-timeLeft} seconds.`;
-    }
-
-    startAmbientGhosts();
-    initWindows();
+    initMansion();
 </script>
 </body>
 </html>
