@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>陰森大宅 - 最終音樂版</title>
+    <title>陰森大宅 - 真人版</title>
     <style>
         /* 0. 基礎設定 */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -102,6 +102,10 @@
             position: relative;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
             will-change: transform; 
+            /* 預設背景設定，讓圖片居中 */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
         /* 大門樣式 */
@@ -150,16 +154,27 @@
         }
 
         /* --- 狀態樣式 --- */
+        /* 通用開啟狀態 (基礎發光) */
         .window.open {
-            background: linear-gradient(to bottom, #ffeb3b, #ff9800) !important;
-            border-color: #ffeb3b !important;
-            box-shadow: 0 0 30px #ff9800, inset 0 0 15px #ffff00 !important;
+            border-color: #fff !important;
+            box-shadow: 0 0 20px #ffeb3b, inset 0 0 10px rgba(255,255,255,0.5) !important;
             z-index: 20;
+        }
+        
+        /* 圖片 m.png 的窗戶 */
+        .window.open-m {
+            background-image: url('m.png') !important;
+        }
+
+        /* 圖片 R.png 的窗戶 */
+        .window.open-r {
+            background-image: url('R.png') !important;
         }
 
         .window.danger {
             background: linear-gradient(to bottom, #ff5555, #ff0000) !important;
             box-shadow: 0 0 20px #ff0000 !important;
+            background-image: none !important; /* 危險時移除圖片 */
         }
 
         /* 封印動畫 */
@@ -167,16 +182,22 @@
             animation: sealEffect 0.4s ease-out forwards !important;
         }
         @keyframes sealEffect {
-            0% { transform: scale(1.4); background-color: #00ff00; box-shadow: 0 0 40px #00ff00; }
-            100% { transform: scale(1); background-color: #1a1122; box-shadow: none; }
+            0% { transform: scale(1.4); filter: brightness(2); box-shadow: 0 0 40px #00ff00; }
+            100% { transform: scale(1); filter: brightness(1); box-shadow: none; }
         }
 
-        /* --- 鬼魂 --- */
+        /* --- 鬼魂 (改用圖片 L.png) --- */
         .ghost {
             position: absolute;
-            font-size: clamp(3rem, 10vw, 4.5rem);
+            /* 改用圖片尺寸控制 */
+            width: clamp(60px, 15vw, 100px);
+            height: clamp(60px, 15vw, 100px);
+            background-image: url('L.png');
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%; /* 圓形鬼魂 */
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8); /* 鬼魂發光 */
             z-index: 30;
-            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
             cursor: pointer;
             pointer-events: auto; 
             transition: transform 0.1s;
@@ -189,7 +210,7 @@
         }
         @keyframes ghostPop {
             0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.8); opacity: 0.6; filter: hue-rotate(180deg) drop-shadow(0 0 20px cyan); }
+            50% { transform: scale(1.5); opacity: 0.6; filter: hue-rotate(90deg) brightness(2); }
             100% { transform: scale(0); opacity: 0; }
         }
 
@@ -255,8 +276,8 @@
 <div id="overlay">
     <h1>陰森大宅</h1>
     <div class="desc">
-        點擊發光的窗戶進行封印<br>
-        <span class="highlight">警告！必須點擊飄過的鬼魂</span>
+        點擊亮起的照片進行封印<br>
+        <span class="highlight">警告！必須點擊飄過的鬼魂(L)</span>
     </div>
     
     <div class="btn-group">
@@ -273,7 +294,7 @@
     const overlay = document.getElementById('overlay');
     const gameStage = document.getElementById('game-stage');
     const modeDisplay = document.getElementById('mode-display');
-    const bgm = document.getElementById('bgm'); // 音樂元件
+    const bgm = document.getElementById('bgm');
 
     let hp = 3;
     let timeLeft = 120;
@@ -301,7 +322,8 @@
                 e.preventDefault();
                 e.stopPropagation(); 
                 if (gameActive && win.classList.contains('open')) {
-                    win.classList.remove('open', 'danger');
+                    // 移除狀態時，也移除圖片class
+                    win.classList.remove('open', 'open-m', 'open-r', 'danger');
                     triggerSealEffect(win);
                 }
             };
@@ -326,6 +348,7 @@
 
         windows.forEach((win, i) => {
             let extraClass = (i === 22) ? ' door' : '';
+            // 重置時清除所有圖片 class
             win.className = `window ${modeClass}${extraClass}`;
             win.style.backgroundColor = '';
             
@@ -367,7 +390,6 @@
     // --- 鬼魂系統 ---
     function startGhosts() {
         if (ghostInterval) clearInterval(ghostInterval);
-        // 生成頻率 (Crazy: 1.2s, 其他: 2s)
         let spawnRate = currentMode === 'crazy' ? 1200 : 2000;
         
         ghostInterval = setInterval(() => {
@@ -379,7 +401,8 @@
     function spawnGhost() {
         const ghost = document.createElement('div');
         ghost.className = 'ghost';
-        ghost.innerText = '👻';
+        // 移除文字 Emoji，CSS 已經設定背景圖 L.png
+        ghost.innerText = ''; 
         
         const direction = Math.random() > 0.5 ? 1 : -1;
         const startX = direction === 1 ? -30 : 130; 
@@ -407,9 +430,10 @@
 
         gameStage.appendChild(ghost);
 
+        // 鬼魂稍微旋轉飄動
         const anim = ghost.animate([
             { transform: `translateX(0) rotate(0deg)` },
-            { transform: `translateX(${direction === 1 ? '160vw' : '-160vw'}) rotate(${Math.random()*180 - 90}deg)` }
+            { transform: `translateX(${direction === 1 ? '160vw' : '-160vw'}) rotate(${Math.random()*60 - 30}deg)` }
         ], {
             duration: duration,
             easing: 'linear'
@@ -435,7 +459,6 @@
     }
 
     function startGame(mode) {
-        // 播放音樂
         bgm.currentTime = 0;
         bgm.play().catch(e => console.log("Audio play failed:", e));
 
@@ -490,8 +513,17 @@
         resetWindowsForNewWave();
         let count = Math.min(2 * waveCount, 22);
         let ids = Array.from({length: 25}, (_, i) => i).sort(() => Math.random() - 0.5);
+        
         for (let i = 0; i < count; i++) {
+            // 基礎開啟 class
             windows[ids[i]].classList.add('open');
+            
+            // 隨機分配 m.png 或 R.png
+            if (Math.random() > 0.5) {
+                windows[ids[i]].classList.add('open-m');
+            } else {
+                windows[ids[i]].classList.add('open-r');
+            }
         }
     }
 
@@ -508,7 +540,6 @@
     }
 
     function endGame() {
-        // 暫停音樂
         bgm.pause();
         
         clearInterval(gameLoop);
