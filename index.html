@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>陰森大宅 - 真人版</title>
+    <title>陰森大宅 - 家人照片版</title>
     <style>
         /* 0. 基礎設定 */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -110,7 +110,7 @@
 
         /* 大門樣式 */
         .window.door {
-            background: #332211; 
+            background-color: #332211; 
             border-color: #553322;
         }
         .window.door::before, .window.door::after {
@@ -122,34 +122,39 @@
 
 
         /* --- 模式區分 --- */
+        
+        /* 1. Easy Mode: 65% 大小 (不變) */
         .window.easy-mode {
             width: 65%; height: 65%;
             transition: transform 0.3s;
         }
 
+        /* 2. Hard Mode: 加大至 70% (原本35%) */
         .window.hard-mode {
-            width: 35%; height: 35%;
+            width: 70%; height: 70%;
+            /* 調整飄移動畫 */
             animation: hardFloat var(--anim-duration, 1s) ease-in-out infinite alternate;
         }
 
         @keyframes hardFloat {
             0% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(var(--mx1), var(--my1)) rotate(8deg); }
-            66% { transform: translate(var(--mx2), var(--my2)) rotate(-8deg); }
+            33% { transform: translate(var(--mx1), var(--my1)) rotate(5deg); }
+            66% { transform: translate(var(--mx2), var(--my2)) rotate(-5deg); }
             100% { transform: translate(var(--mx3), var(--my3)) rotate(0deg); }
         }
 
+        /* 3. Crazy Mode: 加大至 70% (原本35%) */
         .window.crazy-mode {
-            width: 35%; height: 35%;
+            width: 70%; height: 70%;
             border-radius: 50%;
             animation: vortexSpin var(--anim-duration, 2s) linear infinite;
         }
 
         @keyframes vortexSpin {
             0% { transform: rotate(0deg) translate(0, 0) scale(1); }
-            25% { transform: rotate(90deg) translate(30px, 30px) scale(0.6); }
-            50% { transform: rotate(180deg) translate(0, 60px) scale(1.1); }
-            75% { transform: rotate(270deg) translate(-30px, 30px) scale(0.6); }
+            25% { transform: rotate(90deg) translate(20px, 20px) scale(0.8); }
+            50% { transform: rotate(180deg) translate(0, 40px) scale(1.1); }
+            75% { transform: rotate(270deg) translate(-20px, 20px) scale(0.8); }
             100% { transform: rotate(360deg) translate(0, 0) scale(1); }
         }
 
@@ -189,14 +194,14 @@
         /* --- 鬼魂 (改用圖片 L.png) --- */
         .ghost {
             position: absolute;
-            /* 改用圖片尺寸控制 */
-            width: clamp(60px, 15vw, 100px);
-            height: clamp(60px, 15vw, 100px);
+            /* 鬼魂尺寸 */
+            width: clamp(80px, 18vw, 120px);
+            height: clamp(80px, 18vw, 120px);
             background-image: url('L.png');
             background-size: cover;
             background-position: center;
             border-radius: 50%; /* 圓形鬼魂 */
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8); /* 鬼魂發光 */
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6); /* 鬼魂發光 */
             z-index: 30;
             cursor: pointer;
             pointer-events: auto; 
@@ -364,9 +369,10 @@
     }
 
     function randomizeHard(win) {
+        // 因為窗戶變大，移動範圍稍微縮小一點，避免過於混亂
         for(let i=1; i<=3; i++) {
-            const mx = Math.floor(Math.random() * 200) - 100;
-            const my = Math.floor(Math.random() * 200) - 100;
+            const mx = Math.floor(Math.random() * 100) - 50; // 原本 200/100 -> 改小
+            const my = Math.floor(Math.random() * 100) - 50;
             win.style.setProperty(`--mx${i}`, `${mx}%`);
             win.style.setProperty(`--my${i}`, `${my}%`);
         }
